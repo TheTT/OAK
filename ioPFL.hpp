@@ -57,6 +57,9 @@ class Input{
   Input &operator>>(char &c){
     return (c=((S==T)&&(S=BUF,T=S+fread(BUF,sizeof(char),IBUFsize,IFile)),(S==T)?EOF:*(S++)),*this);
   }
+  Input &operator>>(unsigned char &c){
+    return (c=((S==T)&&(S=BUF,T=S+fread(BUF,sizeof(char),IBUFsize,IFile)),(S==T)?EOF:*(S++)),*this);
+  }
   Input &operator>>(short &x){
     static bool w;
     static char c;
@@ -233,6 +236,68 @@ class Input{
     return *this;
   }
 }tin;
+class InputBinary{
+ private:
+  Input *in;
+ public:
+  InputBinary(){
+    in=&tin;
+  }
+  void SetFile(FILE *F_ptr){
+    in->SetFile(F_ptr);
+  }
+  void SetFile(const char *F_path){
+    in->SetFile(F_path);
+  }
+  InputBinary &operator>>(char &c){
+    (*in) >> c;
+    return *this;
+  }
+  InputBinary &operator>>(unsigned char &c){
+    (*in) >> c;
+    return *this;
+  }
+  InputBinary &operator>>(short &x){
+    static unsigned char a,b;
+    (*in) >> a >> b;
+    x=(a|(b<<8));
+    return *this;
+  }
+  InputBinary &operator>>(unsigned short &x){
+    static unsigned char a,b;
+    (*in) >> a >> b;
+    x=(a|(b<<8));
+    return *this;
+  }
+  InputBinary &operator>>(int &x){
+    static unsigned char a,b,c,d;
+    (*in) >> a >> b >> c >> d;
+    x=(a|(b<<8)|(c<<16)|(d<<24));
+    return *this;
+  }
+  InputBinary &operator>>(unsigned int &x){
+    static unsigned char a,b,c,d;
+    (*in) >> a >> b >> c >> d;
+    x=(a|(b<<8)|(c<<16)|(d<<24));
+    return *this;
+  }
+  InputBinary &operator>>(long long &x){
+    static unsigned char a,b,c,d,e,f,g,h;
+    (*in) >> a >> b >> c >> d >> e >> f >> g >> h;
+    x=(a|(b<<8)|(c<<16)|(d<<24)|(e<<32)|(f<<40)|(g<<48)|(h<<56));
+    return *this;
+  }
+  InputBinary &operator>>(unsigned long long &x){
+    static unsigned char a,b,c,d,e,f,g,h;
+    (*in) >> a >> b >> c >> d >> e >> f >> g >> h;
+    x=(a|(b<<8)|(c<<16)|(d<<24)|(e<<32)|(f<<40)|(g<<48)|(h<<56));
+    return *this;
+  }
+  InputBinary &operator>>(char *s){
+    (*in) >> s;
+    return *this;
+  }
+}tinb;
 class Output{
  private:
   char BUF[OBUFsize],*S,*T;
@@ -268,6 +333,9 @@ class Output{
     fopen_s(&OFile,F_path,"w");
   }
   Output &operator<<(const char &c){
+    return err?(fwrite(&c,sizeof(char),1,OFile),*this):((S==T)?Flush():0,*S++=c,*this);
+  }
+  Output &operator<<(const unsigned char &c){
     return err?(fwrite(&c,sizeof(char),1,OFile),*this):((S==T)?Flush():0,*S++=c,*this);
   }
   Output &operator<<(const short &Tx){
@@ -481,4 +549,54 @@ class Output{
     return *this;
   }
 }tout(0),terr(1);
+class OutputBinary{
+ private:
+  Output *out;
+ public:
+  OutputBinary(){
+    out=&tout;
+  }
+  void SetFile(FILE *F_ptr){
+    out->SetFile(F_ptr);
+  }
+  void SetFile(const char *F_path){
+    out->SetFile(F_path);
+  }
+  OutputBinary &operator<<(const char &c){
+    (*out) << c;
+    return *this;
+  }
+  OutputBinary &operator<<(const unsigned char &c){
+    (*out) << c;
+    return *this;
+  }
+  OutputBinary &operator<<(const short &Tx){
+    (*out) << (unsigned char)(Tx&0xFF) << (unsigned char)((Tx>>8)&0xFF);
+    return *this;
+  }
+  OutputBinary &operator<<(const unsigned short &Tx){
+    (*out) << (unsigned char)(Tx&0xFF) << (unsigned char)((Tx>>8)&0xFF);
+    return *this;
+  }
+  OutputBinary &operator<<(const int &Tx){
+    (*out) << (unsigned char)(Tx&0xFF) << (unsigned char)((Tx>>8)&0xFF) << (unsigned char)((Tx>>16)&0xFF) << (unsigned char)((Tx>>24)&0xFF);
+    return *this;
+  }
+  OutputBinary &operator<<(const unsigned int &Tx){
+    (*out) << (unsigned char)(Tx&0xFF) << (unsigned char)((Tx>>8)&0xFF) << (unsigned char)((Tx>>16)&0xFF) << (unsigned char)((Tx>>24)&0xFF);
+    return *this;
+  }
+  OutputBinary &operator<<(const long long &Tx){
+    (*out) << (unsigned char)(Tx&0xFF) << (unsigned char)((Tx>>8)&0xFF) << (unsigned char)((Tx>>16)&0xFF) << (unsigned char)((Tx>>24)&0xFF) << (unsigned char)((Tx>>32)&0xFF) << (unsigned char)((Tx>>40)&0xFF) << (unsigned char)((Tx>>48)&0xFF) << (unsigned char)((Tx>>56)&0xFF);
+    return *this;
+  }
+  OutputBinary &operator<<(const unsigned long long &Tx){
+    (*out) << (unsigned char)(Tx&0xFF) << (unsigned char)((Tx>>8)&0xFF) << (unsigned char)((Tx>>16)&0xFF) << (unsigned char)((Tx>>24)&0xFF) << (unsigned char)((Tx>>32)&0xFF) << (unsigned char)((Tx>>40)&0xFF) << (unsigned char)((Tx>>48)&0xFF) << (unsigned char)((Tx>>56)&0xFF);
+    return *this;
+  }
+  OutputBinary &operator<<(const char *s){
+    (*out) << s;
+    return *this;
+  }
+}toutb;
 #endif
