@@ -10,7 +10,7 @@ Place OAK in the project folder and directly embed it into the project through `
 
 #### To participate contribution
 
-1. Fork warehouse
-2. Create a new Feat_xxx branch
-3. Submit Code
+1. Fork it
+2. Create a branch titled `new Feat_xxx`
+3. Submit your code
 4. Create a new Pull Request
