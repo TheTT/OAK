@@ -41,15 +41,19 @@ Input::~Input(){
   fclose(IFile);
   delete[] BUF;
 }
-void Input::SetFile(FILE *F_ptr){
+void Input::SetFile(FILE *F_ptr,bool flag){
   S=T=BUF;
-  fclose(IFile);
+  if(flag)
+    fclose(IFile);
   IFile=F_ptr;
 }
-void Input::SetFile(const char *F_path){
+void Input::SetFile(const char *F_path,bool flag){
   S=T=BUF;
-  fclose(IFile);
-  fopen_s(&IFile,F_path,"r");
+  if(flag)
+    fclose(IFile);
+  IFile=fopen(F_path,"r");
+  if(!IFile)
+    IFile=NULL;
 }
 Input &Input::operator>>(char &c){
   if(S==T){
@@ -67,8 +71,8 @@ Input &Input::operator>>(unsigned char &c){
     T=S+fread(BUF,sizeof(char),IBUFsize,IFile);
   }
   if(S==T)
-    c=EOF;
-  else c=*(S++);
+    c=(unsigned char)EOF;
+  else c=(unsigned char)*(S++);
   return *this;
 }
 Input &Input::operator>>(short &x){
@@ -127,7 +131,7 @@ Input &Input::operator>>(unsigned int &x){
   while(*this >> c,c<'0'||c>'9')
     if(c==EOF)
       return *this;
-  while(x=x*10+(c-'0'),*this >> c,c>='0'&&c<='9')
+  while(x=x*10U+(unsigned int)(c-'0'),*this >> c,c>='0'&&c<='9')
     if(c==EOF)
       return *this;
   return *this;
@@ -154,7 +158,7 @@ Input &Input::operator>>(unsigned long long &x){
   while(*this >> c,c<'0'||c>'9')
     if(c==EOF)
       return *this;
-  while(x=x*10+(c-'0'),*this >> c,c>='0'&&c<='9')
+  while(x=x*10ULL+(unsigned long long)(c-'0'),*this >> c,c>='0'&&c<='9')
     if(c==EOF)
       return *this;
   return *this;
@@ -187,7 +191,8 @@ Input &Input::operator>>(float &x){
         return *this;
       }
   }
-  w&&(x=-x);
+  if(w)
+    x=-x;
   return *this;
 }
 Input &Input::operator>>(double &x){
@@ -203,16 +208,23 @@ Input &Input::operator>>(double &x){
       return *this;
   if(!j)
     while(x=x*10+(c-'0'),*this >> c,c>='0'&&c<='9')
-      if(c==EOF)
-        return (w&&(x=-x),*this);
+      if(c==EOF){
+        if(w)
+          x=-x;
+        return *this;
+      }
   if(j||c=='.'){
     if(c=='.')
       *this >> c;
     while(k=k*0.1,x+=k*(c-'0'),*this >> c,c>='0'&&c<='9')
-      if(c==EOF)
-        return (w&&(x=-x),*this);
+      if(c==EOF){
+        if(w)
+          x=-x;
+        return *this;
+      }
   }
-  w&&(x=-x);
+  if(w)
+    x=-x;
   return *this;
 }
 Input &Input::operator>>(long double &x){
@@ -228,16 +240,23 @@ Input &Input::operator>>(long double &x){
       return *this;
   if(!j)
     while(x=x*10+(c-'0'),*this >> c,c>='0'&&c<='9')
-      if(c==EOF)
-        return (w&&(x=-x),*this);
+      if(c==EOF){
+        if(w)
+          x=-x;
+        return *this;
+      }
   if(j||c=='.'){
     if(c=='.')
       *this >> c;
     while(k=k*0.1L,x+=k*(c-'0'),*this >> c,c>='0'&&c<='9')
-      if(c==EOF)
-        return (w&&(x=-x),*this);
+      if(c==EOF){
+        if(w)
+          x=-x;
+        return *this;
+      }
   }
-  w&&(x=-x);
+  if(w)
+    x=-x;
   return *this;
 }
 Input &Input::operator>>(char *s){
@@ -263,11 +282,12 @@ Input &Input::operator>>(const IOmem<_Tp> &a){
 InputBinary::InputBinary(){
   in=&tin;
 }
-void InputBinary::SetFile(FILE *F_ptr){
-  in->SetFile(F_ptr);
+void InputBinary::SetFile(FILE *F_ptr,bool flag){
+  in->SetFile(F_ptr,flag);
 }
-void InputBinary::SetFile(const char *F_path){
-  in->SetFile(F_path);
+void InputBinary::SetFile(const char *F_path,bool flag){
+  FILE *tmp=fopen(F_path,"rb");
+  in->SetFile(tmp,flag);
 }
 InputBinary &InputBinary::operator>>(char &c){
   (*in) >> c;
@@ -277,50 +297,39 @@ InputBinary &InputBinary::operator>>(unsigned char &c){
   (*in) >> c;
   return *this;
 }
-InputBinary &InputBinary::operator>>(short &x){
-  static unsigned char a,b;
-  (*in) >> a >> b;
-  x=(short)((unsigned short)a|((unsigned short)b<<8));
-  return *this;
-}
-InputBinary &InputBinary::operator>>(unsigned short &x){
-  static unsigned char a,b;
-  (*in) >> a >> b;
-  x=(unsigned short)((unsigned short)a|((unsigned short)b<<8));
-  return *this;
-}
-InputBinary &InputBinary::operator>>(int &x){
-  static unsigned char a,b,c,d;
-  (*in) >> a >> b >> c >> d;
-  x=(int)((unsigned int)a|((unsigned int)b<<8)|((unsigned int)c<<16)|((unsigned int)d<<24));
-  return *this;
-}
-InputBinary &InputBinary::operator>>(unsigned int &x){
-  static unsigned char a,b,c,d;
-  (*in) >> a >> b >> c >> d;
-  x=((unsigned int)a|((unsigned int)b<<8)|((unsigned int)c<<16)|((unsigned int)d<<24));
-  return *this;
-}
-InputBinary &InputBinary::operator>>(long long &x){
-  static unsigned char a,b,c,d,e,f,g,h;
-  (*in) >> a >> b >> c >> d >> e >> f >> g >> h;
-  x=(long long)((unsigned long long)a|((unsigned long long)b<<8)|((unsigned long long)c<<16)|((unsigned long long)d<<24)|((unsigned long long)e<<32)|((unsigned long long)f<<40)|((unsigned long long)g<<48)|((unsigned long long)h<<56));
-  return *this;
-}
-InputBinary &InputBinary::operator>>(unsigned long long &x){
-  static unsigned char a,b,c,d,e,f,g,h;
-  (*in) >> a >> b >> c >> d >> e >> f >> g >> h;
-  x=((unsigned long long)a|((unsigned long long)b<<8)|((unsigned long long)c<<16)|((unsigned long long)d<<24)|((unsigned long long)e<<32)|((unsigned long long)f<<40)|((unsigned long long)g<<48)|((unsigned long long)h<<56));
-  return *this;
-}
 InputBinary &InputBinary::operator>>(char *s){
-    (*in) >> s;
+  static char c,*st;
+  c='\0';
+  st=s;
+  st[0]='\0';
+  if(c==EOF)
     return *this;
-  }
+  while(*in >> c,c=='\0')
+    if(c==EOF)
+      return *this;
+  while(*st=c,*(++st)='\0',*in >> c,c!=EOF&&c!='\0');
+  return *this;
+}
+template<typename _Tp>
+InputBinary &InputBinary::operator>>(const _Tp &Tx){
+  unsigned char *it=(unsigned char *)&Tx;
+  for(int i=0;i<sizeof(_Tp);i++,it++)
+    (*in) >> *it;
+  return *this;
+}
+template InputBinary &InputBinary::operator>> <short>(const short &Tx);
+template InputBinary &InputBinary::operator>> <unsigned short>(const unsigned short &Tx);
+template InputBinary &InputBinary::operator>> <int>(const int &Tx);
+template InputBinary &InputBinary::operator>> <unsigned int>(const unsigned int &Tx);
+template InputBinary &InputBinary::operator>> <long long>(const long long &Tx);
+template InputBinary &InputBinary::operator>> <unsigned long long>(const unsigned long long &Tx);
+template InputBinary &InputBinary::operator>> <float>(const float &Tx);
+template InputBinary &InputBinary::operator>> <double>(const double &Tx);
+template InputBinary &InputBinary::operator>> <long double>(const long double &Tx);
 
 int Output::Flush(){
   if(!err){
-    fwrite(BUF,sizeof(char),S-BUF,OFile);
+    fwrite(BUF,sizeof(char),(unsigned long)(S-BUF),OFile);
     S=BUF;
   }
   return 0;
@@ -341,21 +350,31 @@ Output::~Output(){
   fclose(OFile);
   delete[] BUF;
 }
-void Output::SetFile(FILE *F_ptr){
+void Output::SetFile(FILE *F_ptr,bool flag){
   Flush();
-  fclose(OFile);
+  if(flag)
+    fclose(OFile);
   OFile=F_ptr;
 }
-void Output::SetFile(const char *F_path){
+void Output::SetFile(const char *F_path,bool flag){
   Flush();
-  fclose(OFile);
-  fopen_s(&OFile,F_path,"w");
+  if(flag)
+    fclose(OFile);
+  OFile=fopen(F_path,"w");
+  if(!OFile)
+    OFile=NULL;
 }
 Output &Output::operator<<(const char &c){
   return err?(fwrite(&c,sizeof(char),1,OFile),*this):((S==T)?Flush():0,*S++=c,*this);
 }
 Output &Output::operator<<(const unsigned char &c){
-  return err?(fwrite(&c,sizeof(char),1,OFile),*this):((S==T)?Flush():0,*S++=c,*this);
+  if(err)
+    fwrite(&c,sizeof(char),1,OFile);
+  else{
+    if(S==T)Flush();
+    *S++=(char)c;
+  }
+  return *this;
 }
 Output &Output::operator<<(const short &Tx){
   static char Sta[6];
@@ -363,10 +382,10 @@ Output &Output::operator<<(const short &Tx){
   static unsigned short x;
   Top=0;
   if(Tx<0){
-    x=(short)-Tx;
+    x=(unsigned short)-Tx;
     *this << '-';
   }
-  else x=Tx;
+  else x=(unsigned short)Tx;
   do{
     Sta[Top++]=(char)(x%10^0x30);
   }while(x/=10);
@@ -393,10 +412,10 @@ Output &Output::operator<<(const int &Tx){
   static unsigned int x;
   Top=0;
   if(Tx<0){
-    x=-Tx;
+    x=(unsigned int)-Tx;
     *this << '-';
   }
-  else x=Tx;
+  else x=(unsigned int)Tx;
   do{
     Sta[Top++]=(char)(x%10^0x30);
   }while(x/=10);
@@ -423,10 +442,10 @@ Output &Output::operator<<(const long long &Tx){
   static unsigned long long x;
   Top=0;
   if(Tx<0){
-    x=-Tx;
+    x=(unsigned long long)-Tx;
     *this << '-';
   }
-  else x=Tx;
+  else x=(unsigned long long)Tx;
   do{
     Sta[Top++]=(char)(x%10^0x30);
   }while(x/=10);
@@ -451,7 +470,8 @@ Output &Output::operator<<(const float &Tx){
   static char Sta[12];
   static int Top;
   static unsigned int x;
-  static float f,eps=1.192092896e-07F;
+  static float f;
+  static const float eps=1.192092896e-07F;
   Top=0;
   if(Tx<0){
     x=(unsigned int)-Tx;
@@ -485,7 +505,8 @@ Output &Output::operator<<(const double &Tx){
   static char Sta[20];
   static int Top;
   static unsigned int x;
-  static double f,eps=2.2204460492503131e-016;
+  static double f;
+  static const double eps=2.2204460492503131e-016;
   Top=0;
   if(Tx<0){
     x=(unsigned int)-Tx;
@@ -519,7 +540,8 @@ Output &Output::operator<<(const long double &Tx){
   static char Sta[20];
   static int Top;
   static unsigned long long x;
-  static long double f,eps=2.2204460492503131e-016;
+  static long double f;
+  static const long double eps=2.2204460492503131e-016;
   Top=0;
   if(Tx<0){
     x=(unsigned long long)-Tx;
@@ -551,7 +573,7 @@ Output &Output::operator<<(const long double &Tx){
 }
 Output &Output::operator<<(const char *s){
   static char *t;
-  t=(char *)((long long)(s));
+  t=(char *)(s);
   while(*t!='\0')
     *this << *t++;
   return *this;
@@ -571,11 +593,12 @@ Output &Output::operator<<(const IOmem<_Tp> &a){
 OutputBinary::OutputBinary(){
   out=&tout;
 }
-void OutputBinary::SetFile(FILE *F_ptr){
-  out->SetFile(F_ptr);
+void OutputBinary::SetFile(FILE *F_ptr,bool flag){
+  out->SetFile(F_ptr,flag);
 }
-void OutputBinary::SetFile(const char *F_path){
-  out->SetFile(F_path);
+void OutputBinary::SetFile(const char *F_path,bool flag){
+  FILE *tmp=fopen(F_path,"wb");
+  out->SetFile(tmp,flag);
 }
 OutputBinary &OutputBinary::operator<<(const char &c){
   (*out) << c;
@@ -585,34 +608,26 @@ OutputBinary &OutputBinary::operator<<(const unsigned char &c){
   (*out) << c;
   return *this;
 }
-OutputBinary &OutputBinary::operator<<(const short &Tx){
-  (*out) << (unsigned char)(Tx&0xFF) << (unsigned char)((Tx>>8)&0xFF);
-  return *this;
-}
-OutputBinary &OutputBinary::operator<<(const unsigned short &Tx){
-  (*out) << (unsigned char)(Tx&0xFF) << (unsigned char)((Tx>>8)&0xFF);
-  return *this;
-}
-OutputBinary &OutputBinary::operator<<(const int &Tx){
-  (*out) << (unsigned char)(Tx&0xFF) << (unsigned char)((Tx>>8)&0xFF) << (unsigned char)((Tx>>16)&0xFF) << (unsigned char)((Tx>>24)&0xFF);
-  return *this;
-}
-OutputBinary &OutputBinary::operator<<(const unsigned int &Tx){
-  (*out) << (unsigned char)(Tx&0xFF) << (unsigned char)((Tx>>8)&0xFF) << (unsigned char)((Tx>>16)&0xFF) << (unsigned char)((Tx>>24)&0xFF);
-  return *this;
-}
-OutputBinary &OutputBinary::operator<<(const long long &Tx){
-  (*out) << (unsigned char)(Tx&0xFF) << (unsigned char)((Tx>>8)&0xFF) << (unsigned char)((Tx>>16)&0xFF) << (unsigned char)((Tx>>24)&0xFF) << (unsigned char)((Tx>>32)&0xFF) << (unsigned char)((Tx>>40)&0xFF) << (unsigned char)((Tx>>48)&0xFF) << (unsigned char)((Tx>>56)&0xFF);
-  return *this;
-}
-OutputBinary &OutputBinary::operator<<(const unsigned long long &Tx){
-  (*out) << (unsigned char)(Tx&0xFF) << (unsigned char)((Tx>>8)&0xFF) << (unsigned char)((Tx>>16)&0xFF) << (unsigned char)((Tx>>24)&0xFF) << (unsigned char)((Tx>>32)&0xFF) << (unsigned char)((Tx>>40)&0xFF) << (unsigned char)((Tx>>48)&0xFF) << (unsigned char)((Tx>>56)&0xFF);
-  return *this;
-}
 OutputBinary &OutputBinary::operator<<(const char *s){
-  (*out) << s;
+  (*out) << s << '\0';
   return *this;
 }
+template<typename _Tp>
+OutputBinary &OutputBinary::operator<<(const _Tp &Tx){
+  unsigned char *it=(unsigned char *)&Tx;
+  for(int i=0;i<sizeof(_Tp);i++,it++)
+    (*out) << *it;
+  return *this;
+}
+template OutputBinary &OutputBinary::operator<< <short>(const short &Tx);
+template OutputBinary &OutputBinary::operator<< <unsigned short>(const unsigned short &Tx);
+template OutputBinary &OutputBinary::operator<< <int>(const int &Tx);
+template OutputBinary &OutputBinary::operator<< <unsigned int>(const unsigned int &Tx);
+template OutputBinary &OutputBinary::operator<< <long long>(const long long &Tx);
+template OutputBinary &OutputBinary::operator<< <unsigned long long>(const unsigned long long &Tx);
+template OutputBinary &OutputBinary::operator<< <float>(const float &Tx);
+template OutputBinary &OutputBinary::operator<< <double>(const double &Tx);
+template OutputBinary &OutputBinary::operator<< <long double>(const long double &Tx);
 
 Input tin;
 InputBinary tinb;

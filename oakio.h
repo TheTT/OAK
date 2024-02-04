@@ -8,9 +8,9 @@ static const int IBUFsize(1<<20),OBUFsize(1<<18);
 template<class _Tp>
 class IOmem{
  private:
- public:
   _Tp S,T;
   char space[5],ender[5];
+ public:
   IOmem();
   IOmem(_Tp s,_Tp t);
   IOmem(_Tp s,_Tp t,const char *Space,const char *Ender);
@@ -22,8 +22,8 @@ class Input{
  public:
   Input();
   ~Input();
-  void SetFile(FILE *F_ptr);
-  void SetFile(const char *F_path);
+  void SetFile(FILE *F_ptr,bool flag=1);
+  void SetFile(const char *F_path,bool flag=1);
   Input &operator>>(char &c);
   Input &operator>>(unsigned char &c);
   Input &operator>>(short &x);
@@ -44,29 +44,25 @@ class InputBinary{
   Input *in;
  public:
   InputBinary();
-  void SetFile(FILE *F_ptr);
-  void SetFile(const char *F_path);
+  void SetFile(FILE *F_ptr,bool flag=1);
+  void SetFile(const char *F_path,bool flag=1);
   InputBinary &operator>>(char &c);
   InputBinary &operator>>(unsigned char &c);
-  InputBinary &operator>>(short &x);
-  InputBinary &operator>>(unsigned short &x);
-  InputBinary &operator>>(int &x);
-  InputBinary &operator>>(unsigned int &x);
-  InputBinary &operator>>(long long &x);
-  InputBinary &operator>>(unsigned long long &x);
   InputBinary &operator>>(char *s);
+  template<typename _Tp>
+  InputBinary &operator>>(const _Tp &Tx);
 };
 class Output{
  private:
   char *BUF,*S,*T;
-  FILE *OFile;
   bool err;
  public:
+  FILE *OFile;
   int Flush();
   Output(int ERR);
   ~Output();
-  void SetFile(FILE *F_ptr);
-  void SetFile(const char *F_path);
+  void SetFile(FILE *F_ptr,bool flag=1);
+  void SetFile(const char *F_path,bool flag=1);
   Output &operator<<(const char &c);
   Output &operator<<(const unsigned char &c);
   Output &operator<<(const short &Tx);
@@ -87,17 +83,13 @@ class OutputBinary{
   Output *out;
  public:
   OutputBinary();
-  void SetFile(FILE *F_ptr);
-  void SetFile(const char *F_path);
+  void SetFile(FILE *F_ptr,bool flag=1);
+  void SetFile(const char *F_path,bool flag=1);
   OutputBinary &operator<<(const char &c);
   OutputBinary &operator<<(const unsigned char &c);
-  OutputBinary &operator<<(const short &Tx);
-  OutputBinary &operator<<(const unsigned short &Tx);
-  OutputBinary &operator<<(const int &Tx);
-  OutputBinary &operator<<(const unsigned int &Tx);
-  OutputBinary &operator<<(const long long &Tx);
-  OutputBinary &operator<<(const unsigned long long &Tx);
   OutputBinary &operator<<(const char *s);
+  template<typename _Tp>
+  OutputBinary &operator<<(const _Tp &Tx);
 };
 
 extern Input tin;
